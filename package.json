@@ -15,7 +15,9 @@
     "playwright": "^1.18.1",
     "user-agents": "^1.0.939"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": {
+    "name": "Filip Johansson",
+    "url": "https://github.com/FilipAxel"
+  },
+  "license": "Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International License"
 }
