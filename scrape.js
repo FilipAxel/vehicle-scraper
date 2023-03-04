@@ -1,9 +1,15 @@
-const cheerio = require('cheerio');
-const playwright = require('playwright');
-const userAgent = require('user-agents');
-require('dotenv').config();
+import cheerio from 'cheerio';
+import playwright from 'playwright';
+import userAgent from 'user-agents';
+import dotenv from 'dotenv';
+import {
+  replaceSpecialCharacters,
+  toPascalCase,
+  validateRegNr,
+} from './utils/vehicle.js';
+dotenv.config();
 
-const LoadHTMLFromPage = async (regnr) => {
+export const LoadHTMLFromPage = async (regnr) => {
   try {
     let html = '';
 
@@ -56,8 +62,7 @@ const LoadHTMLFromPage = async (regnr) => {
     throw `Error loading webpage ${error}`;
   }
 };
-
-const CrawlHTMLV2 = (html) => {
+export const CrawlHTMLV2 = (html) => {
   try {
     const $ = cheerio.load(html);
     let model = {};
@@ -116,65 +121,9 @@ const CrawlHTMLV2 = (html) => {
   }
 };
 
-function toPascalCase(str) {
-  return `${str}`
-    .replace(new RegExp(/[-_]+/, 'g'), ' ')
-    .replace(new RegExp(/[^\w\s]/, 'g'), '')
-    .replace(
-      new RegExp(/\s+(.)(\w*)/, 'g'),
-      ($1, $2, $3) => `${$2.toUpperCase() + $3.toLowerCase()}`,
-    )
-    .replace(new RegExp(/\w/), (s) => s.toUpperCase());
-}
-
-function replaceSpecialCharacters(str) {
-  let finalStr = '';
-
-  for (let i = 0; i < str.length; i++) {
-    let char = str[i];
-
-    switch (char) {
-      case 'Ö':
-        char = 'O';
-        break;
-      case 'Ä':
-        char = 'A';
-        break;
-      case 'ö':
-        char = 'o';
-        break;
-      case 'ä':
-        char = 'a';
-        break;
-      case 'å':
-        char = 'a';
-        break;
-      case 'Å':
-        char = 'A';
-        break;
-      default:
-        break;
-    }
-
-    finalStr += char;
-  }
-
-  return finalStr;
-}
-
-const ValidateRegNr = (regnr) => {
-  return regnr.match(/[a-zA-ZåäöÅÄÖ\d\s]{2,7}/g).length == 1;
-};
-
-exports.TestValidateReg = (regnr) => {
-  return ValidateRegNr(regnr);
-};
-
-// maps data dynamically to a dynamic model, model/data is not static
-// property names are in swedish
-exports.GetVehicleInformation = async (regnr) => {
+export const GetVehicleInformation = async (regnr) => {
   if (!regnr) return 'no registration number attached';
-  if (!ValidateRegNr(regnr)) return 'not a valid registration number';
+  if (!validateRegNr(regnr)) return 'not a valid registration number';
 
   const html = await LoadHTMLFromPage(regnr);
 
@@ -182,16 +131,11 @@ exports.GetVehicleInformation = async (regnr) => {
 };
 
 const updateVehicleData = (data) => {
-  let newVehicle = {};
-  let technicalData =
+  let newVehicleData = {};
+  const technicalData =
     data.TekniskaDatakarossmttOchViktaxlarOchHjulKopplingsanordningOchBromsarPassageraremotorOchMilj;
-  console.log(
-    technicalData.DrivandeAxlarFram,
-    technicalData.DrivandeAxlarBak,
-    technicalData.MaxAxelavstandAxel12,
-    technicalData.Sparvidd,
-  );
-  return (newVehicle = {
+
+  return (newVehicleData = {
     vehicleIdentity: {
       make: data.Fordonsidentitet.Fabrikat ?? null,
       tradeName: data.Fordonsidentitet.Handelsbeteckning ?? null,

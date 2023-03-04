@@ -1,43 +1,25 @@
-/* const api2 = require("fordonsuppgifter-api-wrapper"); */
-const fs = require('fs');
-const { GetVehicleInformation } = require('./scrape');
-const axios = require('axios');
-require('dotenv').config();
+import { GetVehicleInformation } from './scrape.js';
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const directoryName = 'car-data';
+const VehicleRegistrationNumber = 'XDG423';
 
-(async () => {
+const fetchVehicleInfo = async () => {
   console.log('fetching vehicle info');
-  var res = await GetVehicleInformation('LOE61U').catch((e) => {
-    console.warn(e);
-    console.warn('fetching failed');
-  });
-  let data = JSON.stringify(res);
+  try {
+    const res = await GetVehicleInformation(VehicleRegistrationNumber);
+    let data = JSON.stringify(res);
 
-  axios
-    .post(process.env.INTERNALL_API_POST_CALL, res)
-    .then((response) => {
-      console.log(response.data);
-    })
-    .catch((error) => {
-      console.warn(error);
+    const response = await axios.post(process.env.INTERNALL_API_POST_CALL, res);
+    console.log(response.data);
+  } catch (error) {
+    console.warn(error);
+    fs.writeFile('error.txt', res.vehicleIdentity.tradeName, (err) => {
+      if (err) throw err;
+      console.log('Error message written to file');
     });
+  }
+};
 
-  const tradeName = res.vehicleIdentity.tradeName.replace(/\s+/g, '-');
-
-  fs.mkdir(directoryName, (err) => {
-    if (err && err.code !== 'EEXIST') {
-      console.error('Error creating directory:', err);
-      return;
-    }
-    fs.writeFileSync(`${tradeName}.json`, data);
-    fs.writeFile(`${directoryName}/${tradeName}.json`, data, (err) => {
-      if (err) {
-        console.error('Error writing file:', err);
-        return;
-      }
-
-      console.log('File successfully written to directory:', directoryName);
-    });
-  });
-})();
+fetchVehicleInfo();
